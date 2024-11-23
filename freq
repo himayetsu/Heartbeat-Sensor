@@ -209,17 +209,50 @@ void filter_outliers_and_average(float *array, uint8_t size, float *average)
         }
     }
 
-    // Remove outliers (e.g., top and bottom 10%)
-    uint8_t start_index = size / 10;
-    uint8_t end_index = size - start_index;
+    // Calculate Q1 (25th percentile) and Q3 (75th percentile)
+    float Q1 = temp_array[size / 4];
+    float Q3 = temp_array[3 * size / 4];
+    float IQR = Q3 - Q1; // Interquartile range
 
-    // Calculate the average of the remaining values
+    // Determine bounds for non-outliers
+    float lower_bound = Q1 - 1.5 * IQR;
+    float upper_bound = Q3 + 1.5 * IQR;
+
+    // Calculate the average of values within bounds
     float sum = 0.0f;
-    for (uint8_t i = start_index; i < end_index; i++)
+    uint8_t valid_count = 0;
+    for (uint8_t i = 0; i < size; i++)
     {
-        sum += temp_array[i];
+        if (array[i] >= lower_bound && array[i] <= upper_bound)
+        {
+            sum += array[i];
+            valid_count++;
+        }
     }
-    *average = sum / (end_index - start_index);
+
+    // Calculate the average of valid values
+    float valid_average = 0.0f;
+    if (valid_count > 0)
+    {
+        valid_average = sum / valid_count;
+    }
+    else
+    {
+        valid_average = 0.0f; // No valid values
+    }
+
+    // Replace outliers with the valid average
+    for (uint8_t i = 0; i < size; i++)
+    {
+        if (array[i] < lower_bound || array[i] > upper_bound)
+        {
+            array[i] = valid_average;
+        }
+    }
+
+    // Set the final average to the caller
+    *average = valid_average;
+
 }
 
 /**
@@ -241,10 +274,11 @@ void SystemClock_Config(void)
     RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-    RCC_OscInitStruct.PLLM = 16;
-    RCC_OscInitStruct.PLLN = 336;
-    RCC_OscInitStruct.PLLP = RCC_PLLP_DIV4; // Use DIV4 for PLLP
-    RCC_OscInitStruct.PLLQ = 7;            // USB clock divisor
+    RCC_OscInitStruct.PLL.PLLM = 16;
+    RCC_OscInitStruct.PLL.PLLN = 336;
+    RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4; // Correct setting for PLLP
+    RCC_OscInitStruct.PLL.PLLQ = 7;            // USB clock divisor
+
     if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
     {
         Error_Handler();
@@ -263,6 +297,7 @@ void SystemClock_Config(void)
         Error_Handler();
     }
 }
+
 
 /**
   * @brief Error Handler
