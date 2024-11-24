@@ -64,7 +64,7 @@ int main(void)
             filter_outliers_and_average(frequency_array, ARRAY_SIZE, &average_frequency);
 
             // Light up LD2 (PA5) if the average frequency is > threshold
-            if (average_frequency > 5.0f) // Adjust this threshold as needed
+            if (average_frequency > 5.0f||average_frequency < 1.0f) // Adjust this threshold as needed
             {
                 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // Turn on LD2
             }
