@@ -64,9 +64,13 @@ int main(void)
             filter_outliers_and_average(frequency_array, ARRAY_SIZE, &average_frequency);
 
             // Light up LD2 (PA5) if the average frequency is > threshold
-            if (average_frequency > 5.0f||average_frequency < 1.0f) // Adjust this threshold as needed
+            if (average_frequency > 6.0f) // Adjust this threshold as needed
             {
                 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // Turn on LD2
+            }
+            else if (average_frequency < 0.8f) // Adjust this threshold as needed
+            {
+            	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET); // Turn on LD2
             }
             else
             {
@@ -89,7 +93,7 @@ int main(void)
 static void MX_TIM2_Init(void)
 {
     htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 89; // Prescaler for 1 MHz timer clock
+    htim2.Init.Prescaler = 89; // Prescaler for 1 MHz timer clock (principle 3)
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
     htim2.Init.Period = 0xFFFFFFFF; // Max value for 32-bit counter
     htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
